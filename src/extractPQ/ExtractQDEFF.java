@@ -7,7 +7,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class ExtractQDEFF {
-	private final boolean DEBUG=true;
+	private final boolean DEBUG=false;
 	
 	private static final String QDEFF_FILE = "customXml/item1.xml";
 	private static final int BUFFER_SIZE = 4096;
