@@ -40,32 +40,33 @@ public class DecodeQDEFF {
 		
 		// Allocate ByteBuffers of the different PowerQuery data parts
 		packageParts = ByteBuffer.allocate(packagePartsLength);
-		permissions = ByteBuffer.allocate(permissionsLength);
-		metadata = ByteBuffer.allocate(metadataLength);
-		permissionsBinding = ByteBuffer.allocate(permissionsBindingLength);
+		//permissions = ByteBuffer.allocate(permissionsLength);
+		permissions = ByteBuffer.allocate(permissionsLength-3);
+		//metadata = ByteBuffer.allocate(metadataLength);
+		metadata = ByteBuffer.allocate(metadataLength-37);
+		//permissionsBinding = ByteBuffer.allocate(permissionsBindingLength);
+		permissionsBinding = ByteBuffer.allocate(permissionsBindingLength+26);
 		
 		// Fill allocated ByteBuffers with the different parts
 		packageParts.put(encoded, packagePartsOffset + FIELDS_LENGTH, packagePartsLength);
-		permissions.put(encoded, permissionsOffset + FIELDS_LENGTH, permissionsLength);
-		metadata.put(encoded, metadataOffset + FIELDS_LENGTH+8, metadataLength);
-		permissionsBinding.put(encoded, permissionsBindingOffset + FIELDS_LENGTH, permissionsBindingLength);
-
-        // Write all parts to different zip files
- //       writeOutputFile(packageParts.array(), new File("/home/menno/test/zip/output/packageParts.zip") );
-//        writeOutputFile(permissions.array(), new File("/home/menno/test/zip/output/permissions.xml") );
-//        writeOutputFile(metadata.array(), new File("/home/menno/test/zip/output/metadata.xml") );
-//        writeOutputFile(permissionsBinding.array(), new File("/home/menno/test/zip/output/permissionsBinding.txt") );
+		//permissions.put(encoded, permissionsOffset + FIELDS_LENGTH+3, permissionsLength);
+		permissions.put(encoded, permissionsOffset + FIELDS_LENGTH+3, permissionsLength-3);
+		metadata.put(encoded, metadataOffset + FIELDS_LENGTH+11, metadataLength-37);
+		//permissionsBinding.put(encoded, permissionsBindingOffset + FIELDS_LENGTH, permissionsBindingLength);
+		permissionsBinding.put(encoded, permissionsBindingOffset + FIELDS_LENGTH-26, permissionsBindingLength+26);
 	}
 
-	private void writeOutputFile(byte[] outputArray, File outputFile) {
+	public boolean writeOutputFile(byte[] outputArray, File outputFile) {
+		boolean result = true;
         try {
         	FileOutputStream fos = new FileOutputStream(outputFile);
         	fos.write(outputArray);
         	fos.close();
         } catch(IOException e) {
         	System.out.println(e.getMessage());
+        	result=false;
         }
-		
+		return result;
 	}
 	
 	public ByteBuffer getPackageParts() {

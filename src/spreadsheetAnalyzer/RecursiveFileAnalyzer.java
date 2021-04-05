@@ -54,6 +54,9 @@ public class RecursiveFileAnalyzer {
 			ParseDataMashUp pdmu = new ParseDataMashUp();
 			if (pdmu.getXPathValue(destFile, targetPath)) {
 				result = pdmu.extractFormula(targetPath);
+				result = pdmu.extractPermissions(targetPath);
+				result = pdmu.extractPermissionBinding(targetPath);
+				result = pdmu.extractMetaData(targetPath);
 			}
 		}
 		return result;

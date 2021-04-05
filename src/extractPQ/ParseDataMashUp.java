@@ -46,6 +46,18 @@ public class ParseDataMashUp {
 		return result;
 	}
 	
+	public boolean extractPermissions(String targetDir) {
+		return pqDecode.writeOutputFile(pqDecode.getPermissions().array(), new File(targetDir+"/permissions.xml"));
+	}
+	
+	public boolean extractPermissionBinding(String targetDir) {
+		return pqDecode.writeOutputFile(pqDecode.getPermissionsBinding().array(), new File(targetDir+"/permissionBinding.txt"));
+	}
+	
+	public boolean extractMetaData(String targetDir) {
+		return pqDecode.writeOutputFile(pqDecode.getMetadata().array(), new File(targetDir+"/metadata.xml"));
+	}
+	
 	private byte[] base64Decode(String value) {
 		byte[] decodedValue = Base64.getDecoder().decode(value);
         return decodedValue;
