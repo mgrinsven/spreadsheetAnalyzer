@@ -14,10 +14,12 @@ public class VbaExtractor {
 	final static int VBA_EXTRACTED = 2;
 	
 	public VbaExtractor() {
+		System.out.println("VbaExtractor constructor called");
 		vme = new VBAMacroExtractor();
 	}
 
 	int ExtractVba(File sourceFile, String targetDir) {
+		System.out.println("Extracting file: "+sourceFile.getAbsolutePath());
 		int result = OK;
 		try {
 			VBAMacroReader vmr = new VBAMacroReader(sourceFile);

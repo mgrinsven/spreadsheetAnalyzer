@@ -8,7 +8,7 @@ public class SpreadsheetAnalyzer {
 			System.out.println("This java program needs two paramaters");
 			System.out.println("1. directory with excel sheets to be scanned");
 			System.out.println("2. directory where extracted VBA macros will be saved\n");
-			System.out.println("So java -jar checkvba.jar <InputDir> <OutputDir>");
+			System.out.println("So java -jar spreadsheetAnalyzer.jar <InputDir> <OutputDir>");
 			return;
 		}
 		

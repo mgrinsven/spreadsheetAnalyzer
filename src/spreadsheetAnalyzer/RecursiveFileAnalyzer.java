@@ -5,9 +5,11 @@ import java.util.ArrayList;
 
 import extractPQ.ExtractQDEFF;
 import extractPQ.ParseDataMashUp;
+import extractPQ.PowerQueryExtractor;
 
 public class RecursiveFileAnalyzer {
 	private static final boolean DEBUG = true;
+	private ArrayList<File> fList;
 
 	public RecursiveFileAnalyzer() {
 		// TODO Auto-generated constructor stub
@@ -20,8 +22,12 @@ public class RecursiveFileAnalyzer {
 		int totalErrors = 0;
 		
 		VbaExtractor vbaExtractor = new VbaExtractor();
-		ArrayList<File> fList = recursiveFileList(sourceDir);
-		
+		PowerQueryExtractor pqExtractor = new PowerQueryExtractor();
+
+		//ArrayList<File> fList = recursiveFileList(sourceDir);
+		fList = new ArrayList<File>();
+		recursiveFileList(sourceDir);
+
 		for (File file:fList) {
 			int result = vbaExtractor.ExtractVba(file, targetDir);
 			switch (result) {
@@ -32,7 +38,7 @@ public class RecursiveFileAnalyzer {
 				totalVBAFiles++;
 			case VbaExtractor.OK:
 				System.out.println("Now we can start looking at PQ formulas");
-				if (ExtractPQ(file, targetDir)) {
+				if (pqExtractor.ExtractPQ(file, targetDir)) {
 					totalPQFormulas++;
 				}
 				break;
@@ -44,31 +50,13 @@ public class RecursiveFileAnalyzer {
 
 	}
 
-	private boolean ExtractPQ(File file, String targetDir) {
-		boolean result = false;
-		ExtractQDEFF qdeff = new ExtractQDEFF();
-		String targetPath = String.format("%s/%s", targetDir, file.getName());
-		File destFile = new File(targetPath+"/item1.xml");
-		int qdeff_result = qdeff.extractPQFile(file, destFile);
-		if (qdeff_result == ExtractQDEFF.OK) {
-			ParseDataMashUp pdmu = new ParseDataMashUp();
-			if (pdmu.getXPathValue(destFile, targetPath)) {
-				result = pdmu.extractFormula(targetPath);
-				result = pdmu.extractPermissions(targetPath);
-				result = pdmu.extractPermissionBinding(targetPath);
-				result = pdmu.extractMetaData(targetPath);
-			}
-		}
-		return result;
-	}
-	
-	
 	/**
 	 * recursiveFileList recursively creates a list of files
 	 * @param dir Start directory from where the files are added
 	 */
-	private ArrayList<File> recursiveFileList(String dir) {
-		ArrayList<File> flist = new ArrayList<File>();
+	//private ArrayList<File> recursiveFileList(String dir)
+	private void recursiveFileList(String dir) {
+		//ArrayList<File> flist = new ArrayList<File>();
 		File[] files = new File(dir).listFiles();
 		for (File file:files) {
 			if (file.isDirectory()) {
@@ -76,9 +64,10 @@ public class RecursiveFileAnalyzer {
 				recursiveFileList(file.getAbsolutePath());
 			} else {
 				// Perhaps add a file filter also (only xls / xlsx / xlsm)
-				flist.add(file);
+				fList.add(file);
+				System.out.printf("File: %s, Total count %d\n", file, fList.size());
 			}
 		}
-		return flist;
+	//	return flist;
 	}
 }
