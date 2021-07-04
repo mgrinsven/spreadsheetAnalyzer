@@ -3,9 +3,8 @@ package spreadsheetAnalyzer;
 import java.io.File;
 import java.util.ArrayList;
 
-import extractPQ.ExtractQDEFF;
-import extractPQ.ParseDataMashUp;
 import extractPQ.PowerQueryExtractor;
+import parseVBA.ParseVBA;
 
 public class RecursiveFileAnalyzer {
 	private static final boolean DEBUG = true;
@@ -24,7 +23,6 @@ public class RecursiveFileAnalyzer {
 		VbaExtractor vbaExtractor = new VbaExtractor();
 		PowerQueryExtractor pqExtractor = new PowerQueryExtractor();
 
-		//ArrayList<File> fList = recursiveFileList(sourceDir);
 		fList = new ArrayList<File>();
 		recursiveFileList(sourceDir);
 
@@ -36,6 +34,7 @@ public class RecursiveFileAnalyzer {
 				break;
 			case VbaExtractor.VBA_EXTRACTED:
 				totalVBAFiles++;
+				AnalyzeVBAFiles(file, targetDir);
 			case VbaExtractor.OK:
 				System.out.println("Now we can start looking at PQ formulas");
 				if (pqExtractor.ExtractPQ(file, targetDir)) {
@@ -54,9 +53,7 @@ public class RecursiveFileAnalyzer {
 	 * recursiveFileList recursively creates a list of files
 	 * @param dir Start directory from where the files are added
 	 */
-	//private ArrayList<File> recursiveFileList(String dir)
 	private void recursiveFileList(String dir) {
-		//ArrayList<File> flist = new ArrayList<File>();
 		File[] files = new File(dir).listFiles();
 		for (File file:files) {
 			if (file.isDirectory()) {
@@ -68,6 +65,25 @@ public class RecursiveFileAnalyzer {
 				System.out.printf("File: %s, Total count %d\n", file, fList.size());
 			}
 		}
-	//	return flist;
+	}
+
+	private void AnalyzeVBAFiles(File sourceFile, String targetDir) {
+		ParseVBA vbaParser = new ParseVBA();
+		// Construct the directory the VBA extractor put the VBA code
+		String sourceDir = targetDir+"/"+sourceFile.getName();
+		System.out.printf("Scanning VBA files in %s\n", sourceDir);
+
+		// Create a list of VBA souce files inside that directory
+		File[] files = new File(sourceDir).listFiles();
+		// Loop through all the files and let the ANTLR parser decide if the file
+		// contains VBA code we want to analyze further
+		for (File file:files) {
+			if (vbaParser.containsCode(file)) {
+				// The file contains code, so we want to put it somewhere separate
+
+				//TODO copy file to directory and rename if same name exist
+			}
+		}
+
 	}
 }
