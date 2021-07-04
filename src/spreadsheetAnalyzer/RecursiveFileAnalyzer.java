@@ -1,6 +1,8 @@
 package spreadsheetAnalyzer;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import extractPQ.PowerQueryExtractor;
@@ -19,6 +21,7 @@ public class RecursiveFileAnalyzer {
 		int totalVBAFiles = 0;
 		int totalPQFormulas = 0;
 		int totalErrors = 0;
+		int totalFilesContainingRealCode = 0;
 		
 		VbaExtractor vbaExtractor = new VbaExtractor();
 		PowerQueryExtractor pqExtractor = new PowerQueryExtractor();
@@ -34,7 +37,9 @@ public class RecursiveFileAnalyzer {
 				break;
 			case VbaExtractor.VBA_EXTRACTED:
 				totalVBAFiles++;
-				AnalyzeVBAFiles(file, targetDir);
+				if (AnalyzeVBAFiles(file, targetDir)) {
+					totalFilesContainingRealCode++;
+				}
 			case VbaExtractor.OK:
 				System.out.println("Now we can start looking at PQ formulas");
 				if (pqExtractor.ExtractPQ(file, targetDir)) {
@@ -46,7 +51,7 @@ public class RecursiveFileAnalyzer {
 		}
 		System.out.println("===================================");
 		System.out.printf("Total files scanned: %d \nFiles containing VBA: %d\nTotal files containing PQ: %d\nTotal errors: %d\n", totalFileCount, totalVBAFiles, totalPQFormulas,totalErrors);
-
+		System.out.printf("Total files containing real code: %s\n", totalFilesContainingRealCode);
 	}
 
 	/**
@@ -67,7 +72,8 @@ public class RecursiveFileAnalyzer {
 		}
 	}
 
-	private void AnalyzeVBAFiles(File sourceFile, String targetDir) {
+	private boolean AnalyzeVBAFiles(File sourceFile, String targetDir) {
+		boolean result = false;
 		ParseVBA vbaParser = new ParseVBA();
 		// Construct the directory the VBA extractor put the VBA code
 		String sourceDir = targetDir+"/"+sourceFile.getName();
@@ -80,10 +86,16 @@ public class RecursiveFileAnalyzer {
 		for (File file:files) {
 			if (vbaParser.containsCode(file)) {
 				// The file contains code, so we want to put it somewhere separate
-
 				//TODO copy file to directory and rename if same name exist
+				try {
+					Files.copy(Paths.get(file.getAbsolutePath()), Paths.get("/home/menno/git_repos/output/enron/" + file.getName()));
+				} catch (Exception e) {
+					System.out.println(e.getMessage());
+				}
+				//There is at least one vba file that contains a Sub statement
+				result = true;
 			}
 		}
-
+		return result;
 	}
 }

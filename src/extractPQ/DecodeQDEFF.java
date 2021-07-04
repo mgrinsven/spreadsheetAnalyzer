@@ -15,7 +15,7 @@ public class DecodeQDEFF {
 	public static final int METADATA = 2;
 	public static final int PERMISSIONSBINDING = 3;
 	
-	private static int FIELDS_LENGTH = 4;
+	private static final int FIELDS_LENGTH = 4;
 	private ByteBuffer packageParts = null; 
 	private ByteBuffer permissions = null; 
 	private ByteBuffer metadata = null; 
