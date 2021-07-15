@@ -22,6 +22,8 @@ public class VbaExtractor {
 		System.out.println("Extracting file: "+sourceFile.getAbsolutePath());
 		int result = OK;
 		try {
+			// TODO readMacros returns a Map containing all the macro's. Perhaps instead of reading
+			// the files mutiple times, we could use the Map for further processing....
 			VBAMacroReader vmr = new VBAMacroReader(sourceFile);
 			if (vmr.readMacros().size() > 0) {
 				System.out.println(sourceFile.getAbsolutePath()+" contains macros");

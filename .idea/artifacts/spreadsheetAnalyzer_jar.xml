@@ -1,11 +1,11 @@
 <component name="ArtifactManager">
-  <artifact type="jar" name="spreadsheetAnalyzer:jar">
-    <output-path>$PROJECT_DIR$/classes/artifacts/spreadsheetAnalyzer_jar</output-path>
+  <artifact type="jar" build-on-make="true" name="spreadsheetAnalyzer:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/spreadsheetAnalyzer_jar</output-path>
     <root id="archive" name="spreadsheetAnalyzer.jar">
       <element id="module-output" name="spreadsheetAnalyzer" />
-      <element id="extracted-dir" path="$USER_HOME$/eclipse-workspace/poi-4.1.2/poi-4.1.2.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$USER_HOME$/eclipse-workspace/poi-4.1.2/poi-ooxml-4.1.2.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$USER_HOME$/eclipse-workspace/poi-4.1.2/lib/commons-math3-3.6.1.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../poi-4.1.2/poi-4.1.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../antlr4/antlr-4.8-complete.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../poi-4.1.2/lib/commons-math3-3.6.1.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

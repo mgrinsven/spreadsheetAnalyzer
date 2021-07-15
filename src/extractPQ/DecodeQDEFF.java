@@ -7,6 +7,10 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 
+/**
+ * Based upon the code found at:
+ * https://stackoverflow.com/questions/56638375/changing-excel-power-query-connection-string-in-c-sharp
+ */
 public class DecodeQDEFF {
 	private static final boolean DEBUG=true;
 	

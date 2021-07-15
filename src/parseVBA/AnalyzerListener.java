@@ -7,20 +7,34 @@ package parseVBA;
  */
 public class AnalyzerListener extends vbaBaseListener {
     private vbaParser parser;
-    private boolean hasSubStmt = false;
+//    private int nrSubStmts = 0;
+//    private int nrMacroCmts = 0;
+    ParserObservations observations;
 
-    public AnalyzerListener(vbaParser parser) {
+    public AnalyzerListener(vbaParser parser, ParserObservations obs) {
+        this.observations = obs;
         this.parser=parser;
     }
      @Override public void enterSubStmt(vbaParser.SubStmtContext ctx) {
         System.out.println("Enter SubStmt");
-        hasSubStmt = true;
-    }
-    @Override public void exitSubStmt(vbaParser.SubStmtContext ctx) {
-        System.out.println("Exit SubStmt");
+        observations.updateObservation(Observations.VBA_HAS_SUBSTMT);
+//        nrSubStmts++;
     }
 
-    public boolean getSubStmt() {
-        return hasSubStmt;
+    @Override public void enterComment(vbaParser.CommentContext ctx) {
+        if (ctx.getText().toLowerCase().contains("macro")) {
+            System.out.println("This file contains macro inside a comment");
+            observations.updateObservation(Observations.VBA_HAS_MACROS);
+//            nrMacroCmts++;
+        }
     }
+/*    public int getNrSubStmts() {
+        return nrSubStmts;
+    }
+
+    public int getNrMacroCmts() {
+        return nrMacroCmts;
+    }
+
+ */
 }

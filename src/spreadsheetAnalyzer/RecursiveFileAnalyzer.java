@@ -3,26 +3,24 @@ package spreadsheetAnalyzer;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 
 import extractPQ.PowerQueryExtractor;
+//import parseVBA.Observations;
 import parseVBA.ParseVBA;
 
 public class RecursiveFileAnalyzer {
 	private static final boolean DEBUG = true;
 	private ArrayList<File> fList;
+	private AnalyzerStatistics stats;
 
 	public RecursiveFileAnalyzer() {
 		// TODO Auto-generated constructor stub
+		stats = new AnalyzerStatistics();
 	}
 
-	public void Analyze(String sourceDir, String targetDir) {
-		int totalFileCount = 0;
-		int totalVBAFiles = 0;
-		int totalPQFormulas = 0;
-		int totalErrors = 0;
-		int totalFilesContainingRealCode = 0;
-		
+	public void Analyze(String sourceDir, String targetDir, String parsedVbaDir) {
 		VbaExtractor vbaExtractor = new VbaExtractor();
 		PowerQueryExtractor pqExtractor = new PowerQueryExtractor();
 
@@ -33,25 +31,26 @@ public class RecursiveFileAnalyzer {
 			int result = vbaExtractor.ExtractVba(file, targetDir);
 			switch (result) {
 			case VbaExtractor.ERROR:
-				totalErrors++;
+				stats.totalErrors++;
 				break;
 			case VbaExtractor.VBA_EXTRACTED:
-				totalVBAFiles++;
-				if (AnalyzeVBAFiles(file, targetDir)) {
-					totalFilesContainingRealCode++;
-				}
+				stats.totalVBAFiles++;
+				AnalyzeVBAFiles(file, targetDir, parsedVbaDir);
 			case VbaExtractor.OK:
 				System.out.println("Now we can start looking at PQ formulas");
 				if (pqExtractor.ExtractPQ(file, targetDir)) {
-					totalPQFormulas++;
+					stats.totalPQFormulas++;
 				}
 				break;
 			}
-			totalFileCount++;
+			stats.totalFileCount++;
 		}
 		System.out.println("===================================");
-		System.out.printf("Total files scanned: %d \nFiles containing VBA: %d\nTotal files containing PQ: %d\nTotal errors: %d\n", totalFileCount, totalVBAFiles, totalPQFormulas,totalErrors);
-		System.out.printf("Total files containing real code: %s\n", totalFilesContainingRealCode);
+		System.out.printf("Total files scanned: %d \nFiles containing VBA: %d\nTotal files containing PQ: %d\nTotal errors: %d\n", stats.totalFileCount, stats.totalVBAFiles, stats.totalPQFormulas, stats.totalErrors);
+		System.out.printf("Total VBA files: %s\n", stats.totalExtractedVBAFiles);
+		System.out.printf("Total VBA files containing: %s\n", stats.totalVBACodeFiles);
+		System.out.printf("Total VBA files containing recorded macro's: %s\n", stats.totalVBAMacroFiles);
+		System.out.printf("Total empty VBA files: %s\n", stats.totalEmptyVBA);
 	}
 
 	/**
@@ -72,7 +71,7 @@ public class RecursiveFileAnalyzer {
 		}
 	}
 
-	private boolean AnalyzeVBAFiles(File sourceFile, String targetDir) {
+	private boolean AnalyzeVBAFiles(File sourceFile, String targetDir, String parsedVbaDir) {
 		boolean result = false;
 		ParseVBA vbaParser = new ParseVBA();
 		// Construct the directory the VBA extractor put the VBA code
@@ -84,16 +83,30 @@ public class RecursiveFileAnalyzer {
 		// Loop through all the files and let the ANTLR parser decide if the file
 		// contains VBA code we want to analyze further
 		for (File file:files) {
-			if (vbaParser.containsCode(file)) {
-				// The file contains code, so we want to put it somewhere separate
-				//TODO copy file to directory and rename if same name exist
-				try {
-					Files.copy(Paths.get(file.getAbsolutePath()), Paths.get("/home/menno/git_repos/output/enron/" + file.getName()));
-				} catch (Exception e) {
-					System.out.println(e.getMessage());
+			stats.totalExtractedVBAFiles++;
+			if (vbaParser.hasObservations(file)) {
+				if (!vbaParser.getObservations().hasMacros()) {
+					if (vbaParser.getObservations().hasSubStmt()) {
+						stats.totalVBACodeFiles++;
+						// The file contains code, so we want to put it somewhere separate
+						//TODO copy file to directory and rename if same name exist
+						try {
+							// Create a filename consisting of the xls name and the name of the vba source file
+							Files.createDirectories(Paths.get(parsedVbaDir));
+							String targetFileName = String.format("%s-%s", sourceFile.getName(), file.getName());
+							Files.copy(Paths.get(file.getAbsolutePath()), Paths.get(parsedVbaDir + targetFileName), StandardCopyOption.REPLACE_EXISTING);
+						} catch (Exception e) {
+							System.out.println(e.getMessage());
+						}
+						//There is at least one vba file that contains a Sub statement
+						result = true;
+					}
+				} else {
+					stats.totalVBAMacroFiles++;
 				}
-				//There is at least one vba file that contains a Sub statement
-				result = true;
+			} else {
+				// VBA file has no observations, meaning there is no code...
+				stats.totalEmptyVBA++;
 			}
 		}
 		return result;
