@@ -1,5 +1,9 @@
 package parseVBA;
 
+import Statistics.Observations;
+import Statistics.ParserObservations;
+import Statistics.SourceFileStats;
+
 import java.io.File;
 
 public class ParseVBA {
@@ -22,8 +26,9 @@ public class ParseVBA {
 		}
 	}
 
-	public boolean hasObservations(File file) {
-		observations = new ParserObservations();
+	public boolean hasObservations(File file, SourceFileStats sfStats) {
+		//observations = new ParserObservations();
+		observations = sfStats.getObservations();
 		ParserFacade facade = new ParserFacade(observations);
 		try {
 			facade.parse(file);
@@ -32,7 +37,7 @@ public class ParseVBA {
 		}
 		if (observations.hasObservations()) {
 			for (Observations obs:observations.getObservationList()) {
-				System.out.printf("Observation %d : %d\n", obs.Observation, obs.Count);
+				System.out.printf("%s \n", obs.toString());
 			}
 			return true;
 		}

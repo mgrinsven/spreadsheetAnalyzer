@@ -9,4 +9,5 @@ public class AnalyzerStatistics {
     int totalVBAMacroFiles = 0;
     int totalEmptyVBA = 0;
     int totalExtractedVBAFiles = 0;
+    int totalVBACredentials = 0;
 }
