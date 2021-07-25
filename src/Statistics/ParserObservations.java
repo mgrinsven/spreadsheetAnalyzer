@@ -44,7 +44,7 @@ public class ParserObservations {
         return ObservationList;
     }
 
-    public int getObservationCount(int observation) {
+    public int getObservationCount(String observation) {
         int result = 0;
         for (Observations obs : ObservationList) {
             if (obs.Observation.equals(observation)) {
@@ -95,6 +95,10 @@ public class ParserObservations {
             }
         }
         return result;
+    }
+
+    public int countExternalLibRefs() {
+        return getObservationCount(Observations.VBA_USES_EXTLIBS);
     }
 
     @Override

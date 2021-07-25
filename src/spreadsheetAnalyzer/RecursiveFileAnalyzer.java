@@ -7,6 +7,8 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 
 import Statistics.SourceFileStatsArray;
+import Statistics.SpreadsheetStatistics;
+import Statistics.SpreadsheetTotals;
 import extractPQ.PowerQueryExtractor;
 //import Statistics.Observations;
 import parseVBA.ParseVBA;
@@ -16,10 +18,12 @@ public class RecursiveFileAnalyzer {
 	private ArrayList<File> fList;
 	private AnalyzerStatistics stats;
 	private SourceFileStatsArray spreadsheetStats;
+	private SpreadsheetStatistics spreadsheetStatsArray;
 
 	public RecursiveFileAnalyzer() {
 		// TODO Auto-generated constructor stub
 		stats = new AnalyzerStatistics();
+		spreadsheetStatsArray = new SpreadsheetStatistics();
 	}
 
 	public void Analyze(String sourceDir, String targetDir, String parsedVbaDir) {
@@ -30,6 +34,8 @@ public class RecursiveFileAnalyzer {
 		recursiveFileList(sourceDir);
 
 		for (File file:fList) {
+			spreadsheetStats = new SourceFileStatsArray(file);
+			spreadsheetStatsArray.addSpreadsheet(spreadsheetStats);
 			int result = vbaExtractor.ExtractVba(file, targetDir);
 			switch (result) {
 			case VbaExtractor.ERROR:
@@ -41,6 +47,7 @@ public class RecursiveFileAnalyzer {
 			case VbaExtractor.OK:
 				System.out.println("Now we can start looking at PQ formulas");
 				if (pqExtractor.ExtractPQ(file, targetDir)) {
+					spreadsheetStats.setPowerQuery(true);
 					stats.totalPQFormulas++;
 				}
 				break;
@@ -49,11 +56,21 @@ public class RecursiveFileAnalyzer {
 		}
 		System.out.println("===================================");
 		System.out.printf("Total files scanned: %d \nFiles containing VBA: %d\nTotal files containing PQ: %d\nTotal errors: %d\n", stats.totalFileCount, stats.totalVBAFiles, stats.totalPQFormulas, stats.totalErrors);
-		System.out.printf("Total VBA files: %s\n", stats.totalExtractedVBAFiles);
-		System.out.printf("Total VBA files containing code: %s\n", stats.totalVBACodeFiles);
-		System.out.printf("Total VBA files containing recorded macro's: %s\n", stats.totalVBAMacroFiles);
-		System.out.printf("Total empty VBA files: %s\n", stats.totalEmptyVBA);
-		System.out.printf("Total VBA files with credentials: %s\n", stats.totalVBACredentials);
+		System.out.printf("Total VBA files: %d\n", stats.totalExtractedVBAFiles);
+		System.out.printf("Total VBA files containing code: %d\n", stats.totalVBACodeFiles);
+		System.out.printf("Total VBA files containing recorded macro's: %d\n", stats.totalVBAMacroFiles);
+		System.out.printf("Total empty VBA files: %d\n", stats.totalEmptyVBA);
+		System.out.printf("Total VBA files with credentials: %d\n", stats.totalVBACredentials);
+		//System.out.printf("\n\n\n%s", spreadsheetStats.toString());
+
+		System.out.println("===================================");
+		SpreadsheetTotals totals = spreadsheetStatsArray.getTotals();
+		System.out.printf("Total files scanned: %d \nFiles containing VBA: %d\nTotal files containing PQ: %d\nTotal errors: %d\n", spreadsheetStatsArray.getTotalFiles(), totals.totalVBASpreadsheets, totals.totalPowerQuery, stats.totalErrors);
+		System.out.printf("Total VBA files: %d\n", totals.totalFiles);
+		System.out.printf("Total VBA files containing code: %d\n", totals.containsCodeFileCount);
+		System.out.printf("Total VBA files containing recorded macro's: %d\n", totals.containsMacroFileCount);
+		System.out.printf("Total empty VBA files: %d\n", totals.emptyFileCount);
+		System.out.printf("Total VBA files with credentials: %d\n", totals.containsCredentialsFileCount);
 		System.out.printf("\n\n\n%s", spreadsheetStats.toString());
 
 	}
@@ -82,7 +99,7 @@ public class RecursiveFileAnalyzer {
 		// Construct the directory the VBA extractor put the VBA code
 		String sourceDir = targetDir+"/"+sourceFile.getName();
 		System.out.printf("Scanning VBA files in %s\n", sourceDir);
-		spreadsheetStats = new SourceFileStatsArray(sourceFile);
+		//spreadsheetStats = new SourceFileStatsArray(sourceFile);
 
 		// Create a list of VBA souce files inside that directory
 		File[] files = new File(sourceDir).listFiles();
