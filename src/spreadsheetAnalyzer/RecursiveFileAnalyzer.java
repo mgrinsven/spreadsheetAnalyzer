@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 
+import Statistics.ExportStatistics;
 import Statistics.SourceFileStatsArray;
 import Statistics.SpreadsheetStatistics;
 import Statistics.SpreadsheetTotals;
@@ -72,7 +73,8 @@ public class RecursiveFileAnalyzer {
 		System.out.printf("Total empty VBA files: %d\n", totals.emptyFileCount);
 		System.out.printf("Total VBA files with credentials: %d\n", totals.containsCredentialsFileCount);
 		System.out.printf("\n\n\n%s", spreadsheetStats.toString());
-
+		ExportStatistics es = new ExportStatistics();
+		es.createSpreadsheet(spreadsheetStatsArray, true);
 	}
 
 	/**
