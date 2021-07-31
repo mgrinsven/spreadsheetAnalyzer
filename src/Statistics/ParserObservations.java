@@ -12,35 +12,15 @@ public class ParserObservations {
     }
 
     public void addObservation(String observation, int startLine, int endLine, String subject) {
-//        boolean exists=false;
-//        for (Observations obs:ObservationList) {
-//            if (obs.getObservation().equals(observation) && obs.getStartLine() == startLine && obs.getEndLine() == endLine) {
-//                exists = true;
-//            }
-//        }
-//        if (!exists) {
-            ObservationList.add(new Observations(observation, startLine, endLine, subject));
-//        }
+        ObservationList.add(new Observations(observation, startLine, endLine, subject));
     }
 
-/*    public int updateObservation(int observation, int startLine, int endLine) {
-        int result = -1;
-        boolean exists = false;
-        for (Observations obs:ObservationList) {
-            if (obs.getObservation() == observation) {
-                exists = true;
-                obs.Count++;
-                result = obs.Count;
-            }
-        }
-        if (!exists) {
-            ObservationList.add(new Observations(observation, startLine, endLine));
-            result = 1;
-        }
-        return result;
-    }
-*/
     public ArrayList<Observations> getObservationList() {
+        if (ObservationList.size() == 0) {
+            ArrayList<Observations> result = new ArrayList<Observations>();
+            result.add(new Observations(Observations.VBA_HAS_NOOBSERVATIONS,0,0,""));
+            return result;
+        }
         return ObservationList;
     }
 
