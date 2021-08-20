@@ -25,7 +25,7 @@ public class ParserFacade {
         vbaParser parser = new vbaParser(tokens);
 
         //AnalyzerListener extractor = new AnalyzerListener(parser);
-        extractor = new AnalyzerListener(parser, observations);
+        extractor = new AnalyzerListener(parser, observations, file.getName());
 
         ParseTree tree = parser.module();
         ParseTreeWalker.DEFAULT.walk(extractor, tree);

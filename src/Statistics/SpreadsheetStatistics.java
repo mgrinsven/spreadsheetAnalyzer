@@ -36,7 +36,7 @@ public class SpreadsheetStatistics {
 
     public SpreadsheetTotals getTotals() {
         if (!totalsCalculated) {
-            calculateTotals();;
+            calculateTotals();
         }
         return totals;
     }

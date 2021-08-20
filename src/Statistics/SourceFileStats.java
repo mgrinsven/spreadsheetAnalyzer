@@ -1,6 +1,11 @@
 package Statistics;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
 public class SourceFileStats {
@@ -11,6 +16,7 @@ public class SourceFileStats {
     public static final int HAS_EXT_REFS = 4;
 
     File sourceFile;
+    String checkum;
     SourceFileTotals totals;
     ParserObservations parserObservations;
     ArrayList<Integer> parseResults = new ArrayList<Integer>();
@@ -25,12 +31,23 @@ public class SourceFileStats {
         return sourceFile;
     }
 
+    public String getChecksum() {
+        return checkum;
+    }
+
     public ParserObservations getObservations() {
         return parserObservations;
     }
 
     public ArrayList<Integer> getSourceFileStats() {
         if (parseResults.isEmpty()) {
+            try {
+                checkum = calcChecksum(sourceFile);
+                //System.out.printf("SHA1: %s\n", sha1);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
             totals.containsMacroFileCount = parserObservations.countMacros();
             totals.containsCodeFileCount = parserObservations.countCodeBlocks();
             totals.containsCredentialsFileCount = parserObservations.countCredentials();
@@ -62,6 +79,27 @@ public class SourceFileStats {
 
     public ParserObservations getParserObservations() {
         return parserObservations;
+    }
+
+    private String calcChecksum(File file) throws IOException {
+        MessageDigest md = null; //SHA, MD2, MD5, SHA-256, SHA-384...
+        try {
+            md = MessageDigest.getInstance("SHA-1");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        // file hashing with DigestInputStream
+        try (DigestInputStream dis = new DigestInputStream(new FileInputStream(file), md)) {
+            while (dis.read() != -1) ; //empty loop to clear the data
+            md = dis.getMessageDigest();
+        }
+
+        // bytes to hex
+        StringBuilder result = new StringBuilder();
+        for (byte b : md.digest()) {
+            result.append(String.format("%02x", b));
+        }
+        return result.toString();
     }
 
     @Override

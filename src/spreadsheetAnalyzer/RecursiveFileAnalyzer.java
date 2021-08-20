@@ -5,13 +5,12 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 
-import Statistics.ExportStatistics;
-import Statistics.SourceFileStatsArray;
-import Statistics.SpreadsheetStatistics;
-import Statistics.SpreadsheetTotals;
+import Statistics.*;
 import extractPQ.PowerQueryExtractor;
 //import Statistics.Observations;
+import org.apache.poi.ss.usermodel.Row;
 import parseVBA.ParseVBA;
 
 public class RecursiveFileAnalyzer {
@@ -72,7 +71,9 @@ public class RecursiveFileAnalyzer {
 		System.out.printf("Total VBA files containing recorded macro's: %d\n", totals.containsMacroFileCount);
 		System.out.printf("Total empty VBA files: %d\n", totals.emptyFileCount);
 		System.out.printf("Total VBA files with credentials: %d\n", totals.containsCredentialsFileCount);
-		System.out.printf("\n\n\n%s", spreadsheetStats.toString());
+		//System.out.printf("\n\n\n%s", spreadsheetStats.toString());
+
+		copyFilteredFiles(parsedVbaDir);
 		ExportStatistics es = new ExportStatistics();
 		es.createSpreadsheet(spreadsheetStatsArray, true);
 	}
@@ -111,6 +112,7 @@ public class RecursiveFileAnalyzer {
 			Files.createDirectories(Paths.get(parsedVbaDir));
 			Files.createDirectories(Paths.get(parsedVbaDir + "/empty"));
 			Files.createDirectories(Paths.get(parsedVbaDir + "/macro"));
+			Files.createDirectories(Paths.get(parsedVbaDir + "/all"));
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
@@ -128,7 +130,7 @@ public class RecursiveFileAnalyzer {
 						try {
 							// Create a filename consisting of the xls name and the name of the vba source file
 							String targetFileName = String.format("%s-%s", sourceFile.getName(), file.getName());
-							Files.copy(Paths.get(file.getAbsolutePath()), Paths.get(parsedVbaDir + "/" + targetFileName), StandardCopyOption.REPLACE_EXISTING);
+							Files.copy(Paths.get(file.getAbsolutePath()), Paths.get(String.format("%s/all/%s",parsedVbaDir,targetFileName)), StandardCopyOption.REPLACE_EXISTING);
 						} catch (Exception e) {
 							System.out.println(e.getMessage());
 						}
@@ -141,7 +143,7 @@ public class RecursiveFileAnalyzer {
 				} else {
 					try {
 						String targetFileName = String.format("%s-%s", sourceFile.getName(), file.getName());
-						Files.copy(Paths.get(file.getAbsolutePath()), Paths.get(parsedVbaDir + "/macro/" + targetFileName), StandardCopyOption.REPLACE_EXISTING);
+						Files.copy(Paths.get(file.getAbsolutePath()), Paths.get(String.format("%s/macro/%s",parsedVbaDir,targetFileName)), StandardCopyOption.REPLACE_EXISTING);
 						stats.totalVBAMacroFiles++;
 					} catch (Exception e) {
 						System.out.println(e.getMessage());
@@ -151,7 +153,7 @@ public class RecursiveFileAnalyzer {
 				// VBA file has no observations, meaning there is no code...
 				try {
 					String targetFileName = String.format("%s-%s", sourceFile.getName(), file.getName());
-					Files.copy(Paths.get(file.getAbsolutePath()), Paths.get(parsedVbaDir + "/empty/" +targetFileName), StandardCopyOption.REPLACE_EXISTING);
+					Files.copy(Paths.get(file.getAbsolutePath()), Paths.get(String.format("%s/empty/%s",parsedVbaDir,targetFileName)), StandardCopyOption.REPLACE_EXISTING);
 					stats.totalEmptyVBA++;
 				} catch (Exception e) {
 					System.out.println(e.getMessage());
@@ -159,5 +161,32 @@ public class RecursiveFileAnalyzer {
 			}
 		}
 		return result;
+	}
+
+	private void copyFilteredFiles(String parsedVbaDir) {
+		FileChecksums fChecks = new FileChecksums();
+		fChecks.fillChecksums(spreadsheetStatsArray, new ArrayList<Integer>(Arrays.asList(SourceFileStats.HAS_CREDENTIAL_REFS)));
+
+		try {
+			Files.createDirectories(Paths.get(parsedVbaDir + "/filtered"));
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+		for (FileChecksums.ChecksumStruct cs: fChecks.getChecksums()) {
+			try {
+				File spreadsheet = new File(String.format("%s/filtered/%s", parsedVbaDir, cs.getSpreadsheetFile().getName()));
+
+				if (!spreadsheet.exists()) {
+					Files.copy(Paths.get(cs.getSpreadsheetFile().getAbsolutePath()), Paths.get(spreadsheet.getAbsolutePath()), StandardCopyOption.REPLACE_EXISTING);
+				}
+
+				String targetFileName = String.format("%s-%s", cs.getSpreadsheetFile().getName(), cs.getSourceFile().getName());
+				Files.copy(Paths.get(cs.getSourceFile().getAbsolutePath()), Paths.get(String.format("%s/filtered/%s", parsedVbaDir, targetFileName)), StandardCopyOption.REPLACE_EXISTING);
+
+			} catch (Exception e) {
+				System.out.println(e.getMessage());
+			}
+		}
 	}
 }

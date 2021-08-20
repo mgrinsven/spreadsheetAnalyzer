@@ -36,9 +36,9 @@ public class ParseVBA {
 			System.out.println(e.getMessage());
 		}
 		if (observations.hasObservations()) {
-			for (Observations obs:observations.getObservationList()) {
-				System.out.printf("%s \n", obs.toString());
-			}
+//			for (Observations obs:observations.getObservationList()) {
+//				System.out.printf("%s \n", obs.toString());
+//			}
 			return true;
 		}
 		return false;

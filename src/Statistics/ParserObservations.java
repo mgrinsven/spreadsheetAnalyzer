@@ -42,13 +42,7 @@ public class ParserObservations {
     }
 
     public int countMacros() {
-        int result = 0;
-        for (Observations obs : ObservationList) {
-            if (obs.Observation.equals(Observations.VBA_HAS_MACROS)) {
-                result++;
-            }
-        }
-        return result;
+        return getObservationCount(Observations.VBA_HAS_MACROS);
     }
 
     public int countCodeBlocks() {
@@ -70,6 +64,7 @@ public class ParserObservations {
             switch (obs.Observation) {
                 case Observations.VBA_HAS_USERID:
                 case Observations.VBA_HAS_PASSWORD:
+                case Observations.VBA_CREDENTIAL_ASSIGN:
                     result++;
                     break;
             }
