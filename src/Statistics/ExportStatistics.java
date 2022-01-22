@@ -14,7 +14,7 @@ import java.util.Arrays;
  */
 public class ExportStatistics {
     //private Font headerFont, totalsFont;
-    private XSSFCellStyle defaultCellStyle, headerCellStyle, totalsCellStyle, credentialsCellStyle, fileCellStyle, extrefCellStyle;
+    private XSSFCellStyle defaultCellStyle, headerCellStyle, totalsCellStyle, credentialsCellStyle, fileCellStyle, extrefCellStyle, otherCellStyle;
     private final int filesColSize = 60*256;
     private final int sourceColSize = 35*256;
     private final int checksumColSize = 42*256;
@@ -36,7 +36,7 @@ public class ExportStatistics {
         createScanResultSheet(workbook, sStats, omitEmpty);
         createDetailedResults(workbook, sStats, omitEmpty, false);
         createDetailedResults(workbook, sStats, omitEmpty, true);
-        ArrayList<Integer> testResults = new ArrayList<Integer>(Arrays.asList(SourceFileStats.HAS_CREDENTIAL_REFS));
+        ArrayList<Integer> testResults = new ArrayList<Integer>(Arrays.asList(SourceFileStats.HAS_CREDENTIAL_REFS, SourceFileStats.HAS_DB_REFS));
         createFilteredSheet(workbook, sStats, "Files with credentails", testResults );
         createChecksumOverview(workbook, sStats, "Checksum overview", testResults);
         writeSpreadhseet(workbook);
@@ -51,11 +51,13 @@ public class ExportStatistics {
         byte[] bOrange = new byte[]{(byte)244, (byte)212, (byte)128};
         byte[] bRed = new byte[] {(byte)255, (byte)128, (byte)149};
         byte[] bBlue = new byte[] {(byte)128, (byte)191, (byte)255};
+        byte[] bGreen = new byte[] {(byte)204, (byte)255, (byte)212};
 
         XSSFColor grey = new XSSFColor(bGrey, null);
         XSSFColor orange = new XSSFColor(bOrange, null);
         XSSFColor red = new XSSFColor(bRed, null);
         XSSFColor blue = new XSSFColor(bBlue, null);
+        XSSFColor green = new XSSFColor(bGreen, null);
 
         // crrate defailt cellstyle
         defaultCellStyle = workbook.createCellStyle();
@@ -97,6 +99,12 @@ public class ExportStatistics {
         extrefCellStyle.setFillForegroundColor(orange);
         //extrefCellStyle.setFillBackgroundColor(new XSSFColor(new java.awt.Color(255, 212, 128)));
         extrefCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+        // otherCellStyle
+        otherCellStyle = workbook.createCellStyle();
+        otherCellStyle.setFillForegroundColor(green);
+        otherCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
     }
 
     /**
@@ -106,10 +114,11 @@ public class ExportStatistics {
      * @param omitEmpty
      */
     public void createScanResultSheet(XSSFWorkbook workbook, SpreadsheetStatistics sStats, boolean omitEmpty) {
-        String[] columns = {"Excel filename", "VBA Source files", "Empty source files", "Macro source files", "Source files with Subs/Funcs", "Source files with ext refs", "Source files with credentials"};
+        String[] columns = {"Excel filename", "VBA Source files", "Empty source files", "Macro source files", "Source files with Subs/Funcs", "Source files with ext refs", "Source files with credentials", "DataMashup URI"};
 
         Sheet scanResults = workbook.createSheet("Scan results");
         scanResults.setColumnWidth(0, filesColSize);
+        scanResults.setColumnWidth(7, filesColSize);
 
         // Create a Row
         Row headerRow = scanResults.createRow(0);
@@ -134,6 +143,7 @@ public class ExportStatistics {
                 row.createCell(4).setCellValue(ssArray.getTotals().containsCodeFileCount);
                 row.createCell(5).setCellValue(ssArray.getTotals().containsExtRefsFileCount);
                 row.createCell(6).setCellValue(ssArray.getTotals().containsCredentialsFileCount);
+                row.createCell(7).setCellValue(ssArray.getDataMashupURI());
             }
         }
         // calculate totals
@@ -159,7 +169,7 @@ public class ExportStatistics {
     private void createSummarySheet(XSSFWorkbook workbook, SpreadsheetStatistics stats) {
         XSSFSheet sheet = workbook.createSheet("Summary");
 
-        String sumColsHeader[] = {"Total files scanned", "Total files with PQ", "Total files containing VBA", "Total VBA files detected", "Total VBA files containing code", "Total VBA files containing macros", "Total empty VBA files", "Total VBA files containing credentials"};
+        String sumColsHeader[] = {"Total files scanned", "Total files with PQ", "Total files containing other DMU", "Total files containing VBA", "Total VBA files detected", "Total VBA files containing code", "Total VBA files containing macros", "Total empty VBA files", "Total VBA files containing credentials"};
         SpreadsheetTotals totals = stats.getTotals();
         int numChars = 40;
         sheet.setColumnWidth(0, numChars*256);
@@ -178,27 +188,31 @@ public class ExportStatistics {
 
         Row row3 = sheet.createRow(3);
         row3.createCell(0).setCellValue(sumColsHeader[2]);
-        row3.createCell(1).setCellValue(totals.totalVBASpreadsheets);
+        row3.createCell(1).setCellValue(totals.totalOtherDMU);
 
         Row row4 = sheet.createRow(4);
         row4.createCell(0).setCellValue(sumColsHeader[3]);
-        row4.createCell(1).setCellValue(totals.totalFiles);
+        row4.createCell(1).setCellValue(totals.totalVBASpreadsheets);
 
         Row row5 = sheet.createRow(5);
         row5.createCell(0).setCellValue(sumColsHeader[4]);
-        row5.createCell(1).setCellValue(totals.containsCodeFileCount);
+        row5.createCell(1).setCellValue(totals.totalFiles);
 
         Row row6 = sheet.createRow(6);
         row6.createCell(0).setCellValue(sumColsHeader[5]);
-        row6.createCell(1).setCellValue(totals.containsMacroFileCount);
+        row6.createCell(1).setCellValue(totals.containsCodeFileCount);
 
         Row row7 = sheet.createRow(7);
         row7.createCell(0).setCellValue(sumColsHeader[6]);
-        row7.createCell(1).setCellValue(totals.emptyFileCount);
+        row7.createCell(1).setCellValue(totals.containsMacroFileCount);
 
         Row row8 = sheet.createRow(8);
         row8.createCell(0).setCellValue(sumColsHeader[7]);
-        row8.createCell(1).setCellValue(totals.containsCredentialsFileCount);
+        row8.createCell(1).setCellValue(totals.emptyFileCount);
+
+        Row row9 = sheet.createRow(9);
+        row9.createCell(0).setCellValue(sumColsHeader[8]);
+        row9.createCell(1).setCellValue(totals.containsCredentialsFileCount);
 
         // Try to create a pie-chart
         XSSFDrawing drawing = sheet.createDrawingPatriarch();
@@ -367,6 +381,8 @@ public class ExportStatistics {
 
         String headers[] = {"Checksum", "Count", "Source"};
         Sheet sheet = workbook.createSheet(sheetName);
+        // Add another sheet ordered by number of occurences
+        Sheet ordered = workbook.createSheet("Sorted List");
 
         sheet.setColumnWidth(0, checksumColSize);
         sheet.setColumnWidth(2, filesColSize+sourceColSize);
@@ -443,6 +459,10 @@ public class ExportStatistics {
         if (pObs.getObservation().contains(Observations.VBA_USES_EXTLIBS)) {
              result = extrefCellStyle;
         }
-        return result;
+        if (pObs.getObservation().contains(Observations.VBA_DB_ASSIGN)) {
+            result = otherCellStyle;
+        }
+
+         return result;
     }
 }

@@ -1,5 +1,7 @@
 package Statistics;
 
+import extractPQ.PowerQueryExtractor;
+
 import java.io.File;
 import java.util.ArrayList;
 
@@ -8,7 +10,12 @@ public class SourceFileStatsArray {
     boolean totalsCalculated = false;
     File spreadsheetFile;
     ArrayList<SourceFileStats> sfStats;
-    boolean containsPowerQuery = false;
+
+    // PQ related information
+    int containsPowerQuery = PowerQueryExtractor.PQ_OK;
+    String dataMashUpURI = "";
+
+    boolean containsError = false;
 
     public SourceFileStatsArray(File spreadsheet) {
         spreadsheetFile = spreadsheet;
@@ -67,12 +74,34 @@ public class SourceFileStatsArray {
         return totals;
     }
 
-    public void setPowerQuery(boolean containsPQ) {
-        containsPowerQuery = containsPQ;
+    public void setDataMashupURI(String mashUpURI) {
+        dataMashUpURI = mashUpURI;
+    }
+    public String getDataMashupURI() {
+        return dataMashUpURI;
     }
 
+    public void setPowerQuery(int containsPQ) {
+        containsPowerQuery = containsPQ;
+    }
     public boolean hasPowerQuery() {
-        return containsPowerQuery;
+        return containsPowerQuery == PowerQueryExtractor.PQ_FOUND;
+    }
+
+    public boolean hasOtherDMU() {
+        if (containsPowerQuery == PowerQueryExtractor.PQ_OTHER_DMU) {
+            if (dataMashUpURI.length() > 1) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void setError(boolean setError) {
+        containsError = setError;
+    }
+    public boolean hasError() {
+        return containsError;
     }
 
     @Override

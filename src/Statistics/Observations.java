@@ -10,7 +10,7 @@ public class Observations {
     public static final String VBA_USES_EXTLIBS = "VBA_USES_EXTLIBS";
     public static final String VBA_CREDENTIAL_ASSIGN = "VBA_CREDENTIAL_ASSIGN";
     public static final String VBA_FILENAME_ASSIGN = "VBA_FILENAME_ASSIGN";
-    public static final String VBA_DB_ASSIGN = "VBA_FILENAME_ASSIGN";
+    public static final String VBA_DB_ASSIGN = "VBA_DB_ASSIGN";
 
     String Observation;
     int startLine;

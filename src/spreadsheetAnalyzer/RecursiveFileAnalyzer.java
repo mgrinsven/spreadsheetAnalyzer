@@ -9,20 +9,18 @@ import java.util.Arrays;
 
 import Statistics.*;
 import extractPQ.PowerQueryExtractor;
-//import Statistics.Observations;
-import org.apache.poi.ss.usermodel.Row;
 import parseVBA.ParseVBA;
 
 public class RecursiveFileAnalyzer {
 	private static final boolean DEBUG = true;
 	private ArrayList<File> fList;
-	private AnalyzerStatistics stats;
+//	private AnalyzerStatistics stats;
 	private SourceFileStatsArray spreadsheetStats;
 	private SpreadsheetStatistics spreadsheetStatsArray;
 
 	public RecursiveFileAnalyzer() {
 		// TODO Auto-generated constructor stub
-		stats = new AnalyzerStatistics();
+//		stats = new AnalyzerStatistics();
 		spreadsheetStatsArray = new SpreadsheetStatistics();
 	}
 
@@ -39,21 +37,26 @@ public class RecursiveFileAnalyzer {
 			int result = vbaExtractor.ExtractVba(file, targetDir);
 			switch (result) {
 			case VbaExtractor.ERROR:
-				stats.totalErrors++;
+				spreadsheetStats.setError(true);
 				break;
 			case VbaExtractor.VBA_EXTRACTED:
-				stats.totalVBAFiles++;
+				//stats.totalVBAFiles++;
 				AnalyzeVBAFiles(file, targetDir, parsedVbaDir);
 			case VbaExtractor.OK:
 				System.out.println("Now we can start looking at PQ formulas");
-				if (pqExtractor.ExtractPQ(file, targetDir)) {
-					spreadsheetStats.setPowerQuery(true);
-					stats.totalPQFormulas++;
+				int pqResult = pqExtractor.ExtractPQ(file, targetDir);
+				switch (pqResult) {
+					case PowerQueryExtractor.PQ_FOUND:
+					case PowerQueryExtractor.PQ_OTHER_DMU:
+						spreadsheetStats.setDataMashupURI(pqExtractor.getDataMashUpURI());
+						spreadsheetStats.setPowerQuery(pqResult);
+						break;
 				}
 				break;
 			}
-			stats.totalFileCount++;
+			//stats.totalFileCount++;
 		}
+/*
 		System.out.println("===================================");
 		System.out.printf("Total files scanned: %d \nFiles containing VBA: %d\nTotal files containing PQ: %d\nTotal errors: %d\n", stats.totalFileCount, stats.totalVBAFiles, stats.totalPQFormulas, stats.totalErrors);
 		System.out.printf("Total VBA files: %d\n", stats.totalExtractedVBAFiles);
@@ -61,11 +64,10 @@ public class RecursiveFileAnalyzer {
 		System.out.printf("Total VBA files containing recorded macro's: %d\n", stats.totalVBAMacroFiles);
 		System.out.printf("Total empty VBA files: %d\n", stats.totalEmptyVBA);
 		System.out.printf("Total VBA files with credentials: %d\n", stats.totalVBACredentials);
-		//System.out.printf("\n\n\n%s", spreadsheetStats.toString());
-
+*/
 		System.out.println("===================================");
 		SpreadsheetTotals totals = spreadsheetStatsArray.getTotals();
-		System.out.printf("Total files scanned: %d \nFiles containing VBA: %d\nTotal files containing PQ: %d\nTotal errors: %d\n", spreadsheetStatsArray.getTotalFiles(), totals.totalVBASpreadsheets, totals.totalPowerQuery, stats.totalErrors);
+		System.out.printf("Total files scanned: %d \nFiles containing VBA: %d\nTotal files containing PQ: %d\nTotal errors: %d\n", spreadsheetStatsArray.getTotalFiles(), totals.totalVBASpreadsheets, totals.totalPowerQuery, totals.totalErrors);
 		System.out.printf("Total VBA files: %d\n", totals.totalFiles);
 		System.out.printf("Total VBA files containing code: %d\n", totals.containsCodeFileCount);
 		System.out.printf("Total VBA files containing recorded macro's: %d\n", totals.containsMacroFileCount);
@@ -119,12 +121,12 @@ public class RecursiveFileAnalyzer {
 		// Loop through all the files and let the ANTLR parser decide if the file
 		// contains VBA code we want to analyze further
 		for (File file:files) {
-			stats.totalExtractedVBAFiles++;
-
+			//System.out.printf("Analyzing file: %s\n", file.getName());
+//			stats.totalExtractedVBAFiles++;
 			if (vbaParser.hasObservations(file, spreadsheetStats.addSourceFile(file))) {
 				if (vbaParser.getObservations().countMacros() > 0) {
 					if (vbaParser.getObservations().countCodeBlocks() > 0) {
-						stats.totalVBACodeFiles++;
+//						stats.totalVBACodeFiles++;
 						// The file contains code, so we want to put it somewhere separate
 						//TODO copy file to directory and rename if same name exist
 						try {
@@ -134,9 +136,9 @@ public class RecursiveFileAnalyzer {
 						} catch (Exception e) {
 							System.out.println(e.getMessage());
 						}
-						if (vbaParser.getObservations().countCredentials() > 0) {
-							stats.totalVBACredentials++;
-						}
+//						if (vbaParser.getObservations().countCredentials() > 0) {
+//							stats.totalVBACredentials++;
+//						}
 						//There is at least one vba file that contains a Sub statement
 						result = true;
 					}
@@ -144,7 +146,7 @@ public class RecursiveFileAnalyzer {
 					try {
 						String targetFileName = String.format("%s-%s", sourceFile.getName(), file.getName());
 						Files.copy(Paths.get(file.getAbsolutePath()), Paths.get(String.format("%s/macro/%s",parsedVbaDir,targetFileName)), StandardCopyOption.REPLACE_EXISTING);
-						stats.totalVBAMacroFiles++;
+//						stats.totalVBAMacroFiles++;
 					} catch (Exception e) {
 						System.out.println(e.getMessage());
 					}
@@ -154,7 +156,7 @@ public class RecursiveFileAnalyzer {
 				try {
 					String targetFileName = String.format("%s-%s", sourceFile.getName(), file.getName());
 					Files.copy(Paths.get(file.getAbsolutePath()), Paths.get(String.format("%s/empty/%s",parsedVbaDir,targetFileName)), StandardCopyOption.REPLACE_EXISTING);
-					stats.totalEmptyVBA++;
+//					stats.totalEmptyVBA++;
 				} catch (Exception e) {
 					System.out.println(e.getMessage());
 				}
@@ -165,7 +167,7 @@ public class RecursiveFileAnalyzer {
 
 	private void copyFilteredFiles(String parsedVbaDir) {
 		FileChecksums fChecks = new FileChecksums();
-		fChecks.fillChecksums(spreadsheetStatsArray, new ArrayList<Integer>(Arrays.asList(SourceFileStats.HAS_CREDENTIAL_REFS)));
+		fChecks.fillChecksums(spreadsheetStatsArray, new ArrayList<Integer>(Arrays.asList(SourceFileStats.HAS_CREDENTIAL_REFS, SourceFileStats.HAS_DB_REFS)));
 
 		try {
 			Files.createDirectories(Paths.get(parsedVbaDir + "/filtered"));

@@ -27,8 +27,14 @@ public class SpreadsheetStatistics {
             if (sfsArray.hasPowerQuery()) {
                 totals.totalPowerQuery++;
             }
+            if (sfsArray.hasOtherDMU()) {
+                totals.totalOtherDMU++;
+            }
             if (sfsArray.getTotals().totalFiles > 0) {
                 totals.totalVBASpreadsheets++;
+            }
+            if (sfsArray.hasError()) {
+                totals.totalErrors++;
             }
         }
         totalsCalculated = true;

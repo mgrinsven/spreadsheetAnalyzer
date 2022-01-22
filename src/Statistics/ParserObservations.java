@@ -76,6 +76,10 @@ public class ParserObservations {
         return getObservationCount(Observations.VBA_USES_EXTLIBS);
     }
 
+    public int countDatabase() {
+        return getObservationCount(Observations.VBA_DB_ASSIGN);
+    }
+
     @Override
     public String toString() {
         return "ParserObservations{" +

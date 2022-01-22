@@ -14,6 +14,7 @@ public class SourceFileStats {
     public static final int HAS_CREDENTIAL_REFS = 2;
     public static final int HAS_SUBS_AND_FUNC = 3;
     public static final int HAS_EXT_REFS = 4;
+    public static final int HAS_DB_REFS = 5;
 
     File sourceFile;
     String checkum;
@@ -52,6 +53,7 @@ public class SourceFileStats {
             totals.containsCodeFileCount = parserObservations.countCodeBlocks();
             totals.containsCredentialsFileCount = parserObservations.countCredentials();
             totals.containsExtRefsFileCount = parserObservations.countExternalLibRefs();
+            totals.containsDatabaseCount = parserObservations.countDatabase();
 
             if (parserObservations.hasObservations()) {
                 if (totals.containsMacroFileCount > 0) {
@@ -65,6 +67,9 @@ public class SourceFileStats {
                 }
                 if (totals.containsExtRefsFileCount > 0) {
                     parseResults.add(HAS_EXT_REFS);
+                }
+                if (totals.containsDatabaseCount > 0) {
+                    parseResults.add(HAS_DB_REFS);
                 }
             } else {
                 parseResults.add(IS_EMPTY_FILE);

@@ -19,12 +19,17 @@ import java.util.zip.ZipFile;
  *
  */
 public class PowerQueryExtractor {
+    public static final int PQ_ERROR = -1;
+    public static final int PQ_OK = 0;
+    public static final int PQ_FOUND = 1;
+    public static final int PQ_OTHER_DMU = 2;
     private static final String itemProps = "customXml/itemProps1.xml";
     private static final String DataMashUpURI = "http://schemas.microsoft.com/DataMashup";
+    private String strURI;
     private static boolean DEBUG=true;
     private static final int BUFFER_SIZE = 4096;
-    ExtractQDEFF qdeff = null;
-    ParseDataMashUp pdmu = null;
+    ExtractQDEFF qdeff;
+    ParseDataMashUp pdmu;
 
     public PowerQueryExtractor() {
         qdeff = new ExtractQDEFF();
@@ -33,35 +38,40 @@ public class PowerQueryExtractor {
 
     /**
      *
-     * @param file
-     * @param targetDir
-     * @return
+     * @param file  File of the spreadsheet that needs analyzing
+     * @param targetDir Directory where intermediate files need to be stored
+     * @return  boolean indicating if the spreddsheet contains a PQ
      */
-    public boolean ExtractPQ(File file, String targetDir) {
-        boolean result = false;
-        if (hasPowerQuery(file)) {
+    public int ExtractPQ(File file, String targetDir) {
+        int result = PQ_OK;
+        int hasPQ = hasPowerQuery(file);
+        if (hasPQ == PQ_FOUND) {
             String targetPath = String.format("%s/%s", targetDir, file.getName());
             File destFile = new File(targetPath+"/item1.xml");
             int qdeff_result = qdeff.extractPQFile(file, destFile);
             if (qdeff_result == ExtractQDEFF.OK) {
                 if (pdmu.getXPathValue(destFile, targetPath)) {
-                    result = pdmu.extractFormula(targetPath);
-                    result = pdmu.extractPermissions(targetPath);
-                    result = pdmu.extractPermissionBinding(targetPath);
-                    result = pdmu.extractMetaData(targetPath);
+                    pdmu.extractFormula(targetPath);
+                    pdmu.extractPermissions(targetPath);
+                    pdmu.extractPermissionBinding(targetPath);
+                    pdmu.extractMetaData(targetPath);
+                    result = PQ_FOUND;
                 }
             }
+        }
+        if (hasPQ == PQ_OTHER_DMU) {
+            result = PQ_OTHER_DMU;
         }
         return result;
     }
 
     /**
      *
-     * @param zipFile
-     * @return
+     * @param zipFile   ZIP file containing the DataMashUp part that needs to be analyzed
+     * @return boolean
      */
-    private boolean hasPowerQuery(File zipFile) {
-        boolean result = false;
+    private int hasPowerQuery(File zipFile) {
+        int result = PQ_OK;
         File destFile = null;
         try {
             ZipFile zf = new ZipFile(zipFile);
@@ -85,10 +95,10 @@ public class PowerQueryExtractor {
             if (destFile != null) {
                 destFile.deleteOnExit();
             }
-            return false;
+            result = PQ_ERROR;
         }
         //return result;
-        return true;
+        return result;
     }
 
     /**
@@ -97,29 +107,37 @@ public class PowerQueryExtractor {
      *  If the uri attribute of the schemaRef element contains the reference to the DataMashup structure,
      *  we can conclude that the item[x].xml contains the DataMashup data where PowerQuery formulas are stored.
      *
-     * @param destFile
-     * @return
+     * @param destFile  File where the PQ source needs to be stored
+     * @return  result
      */
-    private boolean parseSchemaRef(File destFile) {
-        boolean result = false;
+    private int parseSchemaRef(File destFile) {
+        int result = PQ_OK;
         DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
         try {
             DocumentBuilder builder = domFactory.newDocumentBuilder();
             Document dDoc = builder.parse(new FileInputStream(destFile));
             XPath xPath = XPathFactory.newInstance().newXPath();
             Object objSchemaRef = xPath.evaluate("/*[local-name() = 'datastoreItem']/*[local-name() = 'schemaRefs']/*[local-name() = 'schemaRef']", dDoc, XPathConstants.NODE);
-            String strURI = ((Element) objSchemaRef).getAttribute("ds:uri");
+            strURI = ((Element) objSchemaRef).getAttribute("ds:uri");
             System.out.printf("Datastore Schema is : %s\n", strURI);
             if (strURI.equals(DataMashUpURI)) {
-                result = true;
+                result = PQ_FOUND;
                 System.out.println("Datastore Schema references DataMashUp, so it contains PowerQuery.");
+            } else {
+                if (strURI.length() > 5) {
+                    result = PQ_OTHER_DMU;
+                }
             }
         } catch (Exception e) {
             if (DEBUG) {e.printStackTrace();}
 //            System.out.printf("Error in determining schemaRef: %s for file: %s\n", e.getMessage(), destFile.getName());
-            result = false;
+            result = PQ_ERROR;
         }
         destFile.deleteOnExit();
         return result;
+    }
+
+    public String getDataMashUpURI() {
+        return strURI;
     }
 }

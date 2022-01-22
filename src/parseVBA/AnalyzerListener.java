@@ -38,16 +38,13 @@ public class AnalyzerListener extends vbaBaseListener {
         }
     }
     @Override public void enterFunctionStmt(vbaParser.FunctionStmtContext ctx) {
-        //System.out.println("Enter Function Statement");
+        //System.out.printf("Enter Function Statement: %s\n",ctx.ambiguousIdentifier().getText() );
         observations.addObservation(Observations.VBA_HAS_FUNCSTMT, ctx.getStart().getLine(), ctx.getStop().getLine(), ctx.ambiguousIdentifier().getText());
     }
 
     @Override public void enterArgList(vbaParser.ArgListContext ctx) {
-        //System.out.printf("ArgList [ ");
         for (int i=0; i < ctx.arg().size(); i++) {
-            //System.out.printf("%s, ", ctx.arg(i).getText());
             if (ctx.arg(i).getText().toLowerCase().contains(passWd)) {
-                //System.out.printf("PASSWORD FOUND");
                 //System.out.printf("\nLine of occurence: %d-%d", ctx.getStart().getLine(), ctx.getStop().getLine());
                 observations.addObservation(Observations.VBA_HAS_PASSWORD, ctx.getStart().getLine(), ctx.getStop().getLine(), ctx.arg(i).getText());
             }
@@ -56,24 +53,25 @@ public class AnalyzerListener extends vbaBaseListener {
                 observations.addObservation(Observations.VBA_HAS_USERID, ctx.getStart().getLine(), ctx.getStop().getLine(), ctx.arg(i).getText());
             }
         }
-        //System.out.printf("]\n");
     }
 
     @Override public void enterDeclareStmt(vbaParser.DeclareStmtContext ctx) {
-        //System.out.print("EnterDeclareStmt: [ ");
         String declareString = "";
         for (int i=0; i < ctx.STRINGLITERAL().size(); i++) {
             //System.out.printf("%s : ", ctx.STRINGLITERAL(i).getText());
             declareString = declareString + ctx.STRINGLITERAL(i).getText() + ", ";
         }
-        //System.out.print("]\n");
         observations.addObservation(Observations.VBA_USES_EXTLIBS, ctx.getStart().getLine(), ctx.getStop().getLine(), declareString);
     }
 
-/*    @Override public void enterAmbiguousKeyword(vbaParser.AmbiguousKeywordContext ctx) {
-        System.out.printf("enterAmbiguousKeyword: [ %s ]\n", ctx.getText());
+    @Override public void enterAmbiguousKeyword(vbaParser.AmbiguousKeywordContext ctx) {
+        //System.out.printf("enterAmbiguousKeyword: [ %s, %d - %d ]\n", ctx.getText(), ctx.getStart().getLine(), ctx.getStop().getLine());
+        if (ctx.getText().toLowerCase().contains("database")) {
+            System.out.printf("enterAmbiguousKeyword: [ %s, %d - %d ]\n", ctx.getText(), ctx.getStart().getLine(), ctx.getStop().getLine());
+            observations.addObservation(Observations.VBA_DB_ASSIGN, ctx.getStart().getLine(), ctx.getStop().getLine(), ctx.getText());
+        }
     }
- */
+
     @Override public void enterVsAssign(vbaParser.VsAssignContext ctx) {
         // ctx.implicitCallStmt_InStmt() contains the variable
         //cts.ASSIGN() contains the assignment (i.e. := )
@@ -81,22 +79,22 @@ public class AnalyzerListener extends vbaBaseListener {
 
         //System.out.printf("enterVsAssign: %s\n", ctx.getText());
 //        if (ctx.implicitCallStmt_InStmt().getText().toLowerCase().contains(userID) || ctx.implicitCallStmt_InStmt().getText().toLowerCase().contains(passWd) ) {
-/*        if (ctx.implicitCallStmt_InStmt().getText().toLowerCase().contains(fileRef)) {
-            observations.addObservation(Observations.VBA_FILENAME_ASSIGN, ctx.getStart().getLine(), ctx.getStop().getLine(), ctx.getText());
-        }
-        if (ctx.implicitCallStmt_InStmt().getText().toLowerCase().contains(userID)) {
-            observations.addObservation(Observations.VBA_CREDENTIAL_ASSIGN, ctx.getStart().getLine(), ctx.getStop().getLine(), ctx.getText());
-        }
-        if (ctx.implicitCallStmt_InStmt().getText().toLowerCase().contains(passWd)) {
-            observations.addObservation(Observations.VBA_CREDENTIAL_ASSIGN, ctx.getStart().getLine(), ctx.getStop().getLine(), ctx.getText());
-        }
+//        if (ctx.implicitCallStmt_InStmt().getText().toLowerCase().contains(fileRef)) {
+//            observations.addObservation(Observations.VBA_FILENAME_ASSIGN, ctx.getStart().getLine(), ctx.getStop().getLine(), ctx.getText());
+//        }
+//        if (ctx.implicitCallStmt_InStmt().getText().toLowerCase().contains(userID)) {
+//            observations.addObservation(Observations.VBA_CREDENTIAL_ASSIGN, ctx.getStart().getLine(), ctx.getStop().getLine(), ctx.getText());
+//        }
+        //if (ctx.implicitCallStmt_InStmt().getText().toLowerCase().contains(passWd)) {
+//            observations.addObservation(Observations.VBA_CREDENTIAL_ASSIGN, ctx.getStart().getLine(), ctx.getStop().getLine(), ctx.getText());
+//        }
         if (ctx.implicitCallStmt_InStmt().getText().toLowerCase().contains(sql)) {
             observations.addObservation(Observations.VBA_DB_ASSIGN, ctx.getStart().getLine(), ctx.getStop().getLine(), ctx.getText());
         }
         if (ctx.implicitCallStmt_InStmt().getText().toLowerCase().contains(odbc)) {
             observations.addObservation(Observations.VBA_DB_ASSIGN, ctx.getStart().getLine(), ctx.getStop().getLine(), ctx.getText());
         }
-  */  }
+    }
 
     @Override public void enterImplicitCallStmt_InStmt(vbaParser.ImplicitCallStmt_InStmtContext ctx) {
         //System.out.printf("enterImplicitCallStmt_InStmt: Source: %s --- %s - line: %d\n", sourceFile, ctx.getText(), ctx.getStart().getLine());
@@ -119,7 +117,7 @@ public class AnalyzerListener extends vbaBaseListener {
   */  }
 
     @Override public void enterImplicitCallStmt_InBlock(vbaParser.ImplicitCallStmt_InBlockContext ctx) {
-        System.out.printf("enterImplicitCallStmt_InBlock: Source: %s --- %s - line: %d\n", sourceFile, ctx.getText(), ctx.getStart().getLine());
+        //System.out.printf("enterImplicitCallStmt_InBlock: Source: %s --- %s - line: %d\n", sourceFile, ctx.getText(), ctx.getStart().getLine());
         if (ctx.getText().toLowerCase().contains(fileRef)) {
             observations.addObservation(Observations.VBA_FILENAME_ASSIGN, ctx.getStart().getLine(), ctx.getStop().getLine(), ctx.getText());
         }
@@ -136,5 +134,19 @@ public class AnalyzerListener extends vbaBaseListener {
             observations.addObservation(Observations.VBA_DB_ASSIGN, ctx.getStart().getLine(), ctx.getStop().getLine(), ctx.getText());
         }
 
+    }
+
+    @Override public void enterWriteStmt(vbaParser.WriteStmtContext ctx) {
+        System.out.printf("enterWriteStmt: Source: %s --- %s - line: %d\n", sourceFile, ctx.getText(), ctx.getStart().getLine());
+    }
+
+    @Override public void enterFileNumber(vbaParser.FileNumberContext ctx) {
+        System.out.printf("enterFileNumber: Source: %s --- %s - line: %d\n", sourceFile, ctx.getText(), ctx.getStart().getLine());
+    }
+    @Override public void enterFilecopyStmt(vbaParser.FilecopyStmtContext ctx) {
+        System.out.printf("enterFilecopyStmt: Source: %s --- %s - line: %d\n", sourceFile, ctx.getText(), ctx.getStart().getLine());
+    }
+    @Override public void enterOpenStmt(vbaParser.OpenStmtContext ctx) {
+        System.out.printf("enterOpenStmt: Source: %s --- %s - line: %d\n", sourceFile, ctx.getText(), ctx.getStart().getLine());
     }
 }

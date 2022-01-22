@@ -51,10 +51,14 @@ public class FileChecksums {
     public void fillChecksums(SpreadsheetStatistics stats, ArrayList<Integer> parseResults) {
         for (SourceFileStatsArray ssArray: stats.getSpreadsheetStats()) {
             for (SourceFileStats sfStats: ssArray.getSourceFileStats()) {
+                boolean added = false;
                 for (Integer result: sfStats.getSourceFileStats()) {
                     for (Integer checkResult : parseResults) {
                         if (checkResult == result) {
-                            addChecksum(sfStats.getChecksum(), ssArray.getSpreadsheetFile(), sfStats.getSourceFile());
+                            if (!added) {
+                                added = true;
+                                addChecksum(sfStats.getChecksum(), ssArray.getSpreadsheetFile(), sfStats.getSourceFile());
+                            }
                         }
                     }
                 }

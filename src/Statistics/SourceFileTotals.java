@@ -5,4 +5,5 @@ public class SourceFileTotals {
     public int containsMacroFileCount = 0;
     public int containsCredentialsFileCount = 0;
     public int containsExtRefsFileCount = 0;
+    public int containsDatabaseCount = 0;
 }
